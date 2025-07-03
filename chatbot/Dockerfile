@@ -25,4 +25,4 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8000 8501
 
 # Command to run services with output redirection
-CMD ["./start.sh"]
+CMD ["sh", "-c", "python api.py & streamlit run app.py --server.port=8501 --server.address=0.0.0.0"]
