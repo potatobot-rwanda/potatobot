@@ -5,23 +5,14 @@ import uuid
 import os
 
 # Konfiguration der Seite
-st.set_page_config(page_title="Animal Chatbot", page_icon="🐾", layout="centered")
+st.set_page_config(page_title="PotatoBot", page_icon="🥔", layout="centered")
 
 # Get API base URL from environment variable or use default
-API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost")
-API_PORT = os.environ.get("API_PORT", "8001")
+POTATOBOT_API_URL = os.environ.get("POTATOBOT_API_URL", "http://localhost:8000")
 
-# Determine the correct API URL
-# If API_BASE_URL is localhost, use port 8000 (internal container communication)
-# Otherwise use the external port (for browser access from outside)
-if "localhost" in API_BASE_URL or "127.0.0.1" in API_BASE_URL:
-    API_URL = f"{API_BASE_URL}:8000/chat"
-else:
-    API_URL = f"{API_BASE_URL}:{API_PORT}/chat"
+print(f"API_URL: {POTATOBOT_API_URL}")
 
-print(f"API_URL: {API_URL}")
-
-# CSS für besseres Styling
+# CSS for styling
 st.markdown(
     """
 <style>
@@ -61,12 +52,17 @@ st.markdown(
         padding: 1rem 0;
         z-index: 100;
     }
+
+    .logo{
+        width: 200px;
+        float: right;
+    }
 </style>
 """,
     unsafe_allow_html=True,
 )
 
-# Initialisierung des Session State
+# Initialize session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "current_state" not in st.session_state:
@@ -78,18 +74,10 @@ if "input_key" not in st.session_state:
 if "session_id" not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())
 
-# Titel und Beschreibung
-st.title("🐾 Animal Chatbot")
-st.markdown(
-    """
-Chatte mit einem Fuchs oder einer Ente! 
-Sage einfach "Du bist ein Fuchs" oder "Du bist eine Ente" um den Charakter zu wechseln.
-"""
-)
-
-# Status-Anzeige
-state_emoji = "🦊" if st.session_state.current_state == "fox" else "🦆"
-st.markdown(f"**Aktueller Charakter:** {state_emoji}")
+# Title and description
+st.title("🥔 PotatoBot")
+st.html(f'<img class="logo" src="{POTATOBOT_API_URL}/static/potatobot.png" />')
+st.markdown(f"""Chat with the PotatoBot.""")
 
 # Chat-Verlauf anzeigen
 for message in st.session_state.messages:
@@ -108,7 +96,7 @@ for message in st.session_state.messages:
             st.markdown(
                 f"""
             <div class="chat-message bot">
-                <div>{state_emoji} <b>Bot:</b></div>
+                <div><b>Bot:</b></div>
                 <div>{message["content"]}</div>
             </div>
             """,
@@ -131,7 +119,7 @@ if user_input and user_input != st.session_state.last_input:
     # API-Anfrage senden
     try:
         response = requests.post(
-            API_URL,
+            POTATOBOT_API_URL + "/chat",
             json={
                 "message": user_input,
                 "chat_history": [msg["content"] for msg in st.session_state.messages],
@@ -151,4 +139,4 @@ if user_input and user_input != st.session_state.last_input:
         st.experimental_rerun()
 
     except Exception as e:
-        st.error(f"Fehler bei der Kommunikation mit dem Server: {str(e)}")
+        st.error(e)

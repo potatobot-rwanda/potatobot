@@ -24,15 +24,9 @@ load_dotenv(
 )
 
 # Get API key from environment variable or prompt the user
-API_KEY = os.getenv("CHAT_AI_ACCESS_KEY")
+API_KEY = os.getenv("OPENAI_API_KEY")
 if not API_KEY:
-    API_KEY = getpass.getpass("Enter your CHAT_AI_ACCESS_KEY: ")
-
-# from langchain_groq import ChatGroq
-
-# if not os.environ.get("GROQ_API_KEY"):
-#   os.environ["GROQ_API_KEY"] = getpass.getpass("Enter API key for Groq: ")
-
+    API_KEY = getpass.getpass("Enter your OPENAI_API_KEY: ")
 
 # https://python.langchain.com/v0.1/docs/modules/callbacks/
 class CustomCallback(BaseCallbackHandler):
@@ -63,11 +57,10 @@ class AnimalAgent:
         # Set custom base URL and API key directly in the ChatOpenAI initialization
         # Use the api_key that was determined outside of the class
         self.llm = ChatOpenAI(
-            model="meta-llama-3.1-8b-instruct",
+            model="gpt-4o",
             temperature=0.6,
             logprobs=True,
             openai_api_key=API_KEY,
-            openai_api_base="https://chat-ai.academiccloud.de/v1",
         )
 
         self.state = AnimalAgent.STATE_DUCK
@@ -75,11 +68,10 @@ class AnimalAgent:
         self.duck_chain = self.create_duck_chain()
 
         self.text_classifier_llm = ChatOpenAI(
-            model="meta-llama-3.1-8b-instruct",
+            model="gpt-4o",
             temperature=0.01,
             logprobs=True,
             openai_api_key=API_KEY,
-            openai_api_base="https://chat-ai.academiccloud.de/v1",
         )
 
         self.text_classifier = self.create_text_classifier()

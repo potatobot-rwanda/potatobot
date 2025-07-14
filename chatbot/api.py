@@ -1,10 +1,34 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any
-from animalbot import AnimalAgent
+from animalbot import AnimalAgent, LogWriter
+import logging
+from logging.handlers import RotatingFileHandler
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+log_writer = LogWriter()
+
+def init_logging():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)  # Set the desired logging level
+
+    formatter = logging.Formatter(
+        "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
+    )
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
+    file_handler = RotatingFileHandler('app.log', maxBytes=1024 * 1024, backupCount=5)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
+init_logging()
 
 # CORS für lokale Entwicklung
 app.add_middleware(
@@ -40,12 +64,14 @@ async def chat(chat_message: ChatMessage):
             chat_message.message, 
             chat_message.chat_history
         )
+        log_writer.write(log_message)
         return ChatResponse(
             response=response,
             state=agent.state,
             log_message=log_message
         )
     except Exception as e:
+        logging.exception(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

@@ -1,6 +1,41 @@
-# Animalbot Chatbot
+# PotatoBot
 
-This is the chatbot component of the Animalbot project, which simulates conversations as either a duck or a fox based on user interaction.
+This is the PotatoBot.
+
+
+## Local Development Setup
+
+1. Create a virtual environment:
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Create a `.env` file in the project root:
+```
+CHAT_AI_ACCESS_KEY=your_api_key_here
+```
+
+4. Start the FastAPI server:
+```bash
+cd chatbot
+uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+```
+
+5. In a new terminal, start the Streamlit app:
+```bash
+cd chatbot
+streamlit run app.py
+```
+
+The application will be available at:
+- Streamlit Interface: http://localhost:8502
+- FastAPI: http://localhost:8000
 
 ## Features
 
