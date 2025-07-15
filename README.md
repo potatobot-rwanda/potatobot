@@ -4,6 +4,18 @@
 
 This is the PotatoBot. A chatbot that can help farmers in Rwanda with information about: "When should I spray my potatoes"?
 
+[PotatoBot](#potatobot)
+  * [Getting started](#getting-started)
+    + [Local development setup](#local-development-setup)
+  * [Technical Architecture](#technical-architecture)
+    + [Repository File and Folder Structure](#repository-file-and-folder-structure)
+    + [Technologies used in the chatbot](#technologies-used-in-the-chatbot)
+  * [Notes on chatbot development](#notes-on-chatbot-development)
+    + [Running the chatbot from console](#running-the-chatbot-from-console)
+  * [Logfiles](#logfiles)
+  * [Caching](#caching)
+  * [License](#license)
+
 ## Getting started
 
 ### Local development setup
@@ -26,6 +38,7 @@ Create environment
 ```
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
 
 Install dependencies
 
@@ -82,7 +95,7 @@ The application will be available at:
 - The chatbot logic is in `potatobot.py`
 - Docker configuration is in `Dockerfile` and `compose.yml`
 
-## Notes on the development setup
+## Notes on chatbot development
 
 ### Running the chatbot from console
 
@@ -99,6 +112,17 @@ You can find two types of console interfaces in `potatobot.py`:
 * `console_chatloop()` lets you chat in the console.
 
 You can activate the function by changing the code in the `if __name__ == "__main__":` section of `potatobot.py`.
+
+## Logfiles
+
+The chatbot produces two logfiles:
+
+* `app.log` contains technical logs
+* `conversation.jsonp` contains detailed information about the chatbot, the NLU, the LLMs and more in a machine readable format. It stores one each user message, chatbot answer and related information as a JSON object, one object per line. 
+
+## Caching
+
+To save money / OpenAI LLM credits, the system uses a cache. If you execute the same LLM request a second time, it will be loaded from cache, instead of from the OpenAI API. The cache is stored in `.langchain.db`. You can delete the file to reset the cache.
 
 ## License
 
