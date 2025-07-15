@@ -58,7 +58,7 @@ OPENAI_API_KEY=your_api_key_here
 **5. Start the FastAPI server:**
 ```
 cd chatbot
-python api.py
+python chatbot_api.py
 ```
 
 **6.In a new terminal, start the Streamlit app:**
@@ -78,9 +78,10 @@ The application will be available at:
 ```
 .
 ├── chatbot/
-│   ├── webapp.py          # Streamlit frontend
-│   ├── api.py          # FastAPI backend
-│   ├── animalbot.py    # Core chatbot logic
+├── ├── prompts/            # Chatbot prompts
+│   ├── webapp.py       # Streamlit frontend
+│   ├── chatbot_api.py  # FastAPI backend that wraps an HTTP API around the chatbot
+│   ├── potatobot.py    # Chatbot logic
 │   └── Dockerfile      # Docker configuration
 ├── data/               # Data directory
 ├── requirements.txt    # Python dependencies
