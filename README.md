@@ -1,3 +1,10 @@
+# PotatoBot
+
+![PotatoBot](https://github.com/potatobot-rwanda/potatobot/blob/main/chatbot/static/potatobot.png)
+This is the PotatoBot. A chatbot that can help farmers in Rwanda with information about: "When should I spray my potatoes"?
+
+
+
 # Demo for usage of Langchain with LLMs from chat-ai.academiccloud.de
 ## Overview
 
