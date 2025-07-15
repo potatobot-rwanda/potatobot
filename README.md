@@ -2,7 +2,9 @@
 
 <img src="https://github.com/potatobot-rwanda/potatobot/blob/main/chatbot/static/potatobot.png" width="250" style="float:left">
 
-This is the PotatoBot. A chatbot that can help farmers in Rwanda with information about: "When should I spray my potatoes"?
+This is the PotatoBot, a chatbot that can help farmers in Rwanda with information about: "When should I spray my potatoes"?
+
+## Table of Contents
 
 * [Getting started](#getting-started)
   + [Local development setup](#local-development-setup)
@@ -68,7 +70,6 @@ streamlit run app.py
 The application will be available at:
 - Streamlit Interface: http://localhost:8502
 - FastAPI: http://localhost:8000
-
 
 ## Technical Architecture
 
