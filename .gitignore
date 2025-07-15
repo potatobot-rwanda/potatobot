@@ -1,4 +1,5 @@
 .DS_Store
+.langchain.db
 
 groq_api_key.txt
 conversation.jsonp

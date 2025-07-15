@@ -65,8 +65,6 @@ st.markdown(
 # Initialize session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
-if "current_state" not in st.session_state:
-    st.session_state.current_state = "duck"
 if "last_input" not in st.session_state:
     st.session_state.last_input = ""
 if "input_key" not in st.session_state:
@@ -86,7 +84,7 @@ for message in st.session_state.messages:
             st.markdown(
                 f"""
             <div class="chat-message user">
-                <div>👤 <b>Du:</b></div>
+                <div>👤 <b>You:</b></div>
                 <div>{message["content"]}</div>
             </div>
             """,
@@ -96,7 +94,7 @@ for message in st.session_state.messages:
             st.markdown(
                 f"""
             <div class="chat-message bot">
-                <div><b>Bot:</b></div>
+                <div>🤖 <b>Bot:</b></div>
                 <div>{message["content"]}</div>
             </div>
             """,
@@ -107,7 +105,7 @@ for message in st.session_state.messages:
 with st.container():
     st.markdown('<div class="input-container">', unsafe_allow_html=True)
     user_input = st.text_input(
-        "Deine Nachricht:", key=f"user_input_{st.session_state.input_key}"
+        "Your message:", key=f"user_input_{st.session_state.input_key}"
     )
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -132,11 +130,10 @@ if user_input and user_input != st.session_state.last_input:
         st.session_state.messages.append(
             {"role": "bot", "content": response_data["response"]}
         )
-        st.session_state.current_state = response_data["state"]
 
         # Eingabefeld leeren durch Erhöhung des Keys
         st.session_state.input_key += 1
-        st.experimental_rerun()
+        st.rerun()
 
     except Exception as e:
         st.error(e)

@@ -2,22 +2,40 @@ import getpass
 import os
 from enum import Enum
 import json
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Tuple
+from multiprocessing import Lock
+import concurrent.futures
+import logging
+from logging.handlers import RotatingFileHandler
+
 from langchain_core.output_parsers import StrOutputParser
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain_core.prompts import PromptTemplate
 from langchain_core.outputs import LLMResult
-
 from langchain_openai import ChatOpenAI
+
+from langchain_community.cache import SQLiteCache
+from langchain.globals import set_llm_cache
+set_llm_cache(SQLiteCache(database_path=".langchain.db"))
+
 from dotenv import load_dotenv
 
-# the system emits a log of deprecated warnings to the console if we do not switch if off here
-import sys
+def init_logging(console_level = logging.WARNING, file_level = logging.INFO):
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
 
-if not sys.warnoptions:
-    import warnings
+    formatter = logging.Formatter(
+        "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
+    )
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    console_handler.setLevel(console_level)
+    logger.addHandler(console_handler)
 
-    warnings.simplefilter("ignore")
+    file_handler = RotatingFileHandler('app.log', maxBytes=1024 * 1024, backupCount=5)
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(file_level)
+    logger.addHandler(file_handler)
 
 load_dotenv(
     dotenv_path=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
@@ -41,14 +59,19 @@ class CustomCallback(BaseCallbackHandler):
         self.messages["on_llm_start_kwargs"] = kwargs
 
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> Any:
-        self.messages["on_llm_end_response"] = response
+
+        llm_generation = []
+        for gen in response.generations:
+            for gen2 in gen:
+                llm_generation.append({
+                    "text": gen2.text,
+                    "generation_info": gen2.generation_info
+                })
+
+        self.messages["on_llm_end_response"] = llm_generation
         self.messages["on_llm_end_kwargs"] = kwargs
 
-
-class AnimalAgent:
-
-    STATE_DUCK = "duck"
-    STATE_FOX = "fox"
+class PotatoBot:
 
     def __init__(self):
 
@@ -63,154 +86,159 @@ class AnimalAgent:
             openai_api_key=API_KEY,
         )
 
-        self.state = AnimalAgent.STATE_DUCK
-        self.fox_chain = self.create_fox_chain()
-        self.duck_chain = self.create_duck_chain()
+        self.slots = [
+            {
+                "id": "last_spray_date",
+                "description": "When did the farmer last spray his or her potatoes?",
+                "value": None
+            },
+            {
+                "id": "location",
+                "description": "What is the location of the farm?",
+                "value": None
+            },
+            {
+                "id": "plant_date",
+                "description": "When did the farmer plant his potatoes?",
+                "value": None
+            },
+            {
+                "id": "potato_variety",
+                "description": "Which potato variety does the farmer use?",
+                "value": None
+            },
+        ]
 
-        self.text_classifier_llm = ChatOpenAI(
-            model="gpt-4o",
-            temperature=0.01,
-            logprobs=True,
-            openai_api_key=API_KEY,
-        )
+        # instantiate nlu chains
+        self.nlu_chains = {}
+        for slot in self.slots:
+            slot_id = slot["id"]
+            prompt =  open(f"prompts/nlu_{slot_id}.txt").read()
+            self.nlu_chains[slot_id] = PromptTemplate.from_template(prompt) | self.llm | StrOutputParser()
 
-        self.text_classifier = self.create_text_classifier()
+        prompt =  open("prompts/generate_answer.txt").read()
+        self.generate_answer_chain = PromptTemplate.from_template(prompt) | self.llm | StrOutputParser()
 
-    def create_fox_chain(self):
-        prompt = """You are a fox and have a conversation with a human. You will direct every conversation towards one of these topics. 
+    # fill one of the slots with a predefined value
+    def fill_slot(self, slot_id : str, slot_value : str):
+        found = False
+        for slot in self.slots:
+            if slot["id"] == slot_id:
+                found = True
+                slot["value"] = slot_value
+        assert found
 
-* Magnetic Hunting Skills – Foxes can use Earth’s magnetic field to hunt. They often pounce on prey from the northeast, using the magnetic field as a targeting system!
-* Cat-Like Behavior – Unlike most canines, foxes can retract their claws, have vertical-slit pupils like cats, and even purr when happy.
-* Silent Steps – Foxes have fur-covered footpads that muffle their steps, allowing them to sneak up on prey with ninja-like silence.
-* Communicative Tails – Foxes use their bushy tails (called "brushes") to communicate emotions, signal danger, and even cover their noses for warmth in winter.
-* Over 40 Different Sounds – Foxes are incredibly vocal and can make an eerie scream, giggle-like chirps, and even sounds that resemble human laughter.
-* Jumping Acrobatics – Some foxes, especially fennec foxes and red foxes, can leap over 10 feet in the air to catch prey or escape danger.
-* Urban Tricksters – Foxes have adapted well to cities, where they sometimes steal shoes, dig secret stashes of food, and even ride on public transportation!
-* Bioluminescent Fur? – Some species of foxes (like the Arctic fox) have been found to glow under UV light, though scientists are still studying why.
-* Winter Fur Color Change – Arctic foxes change fur color with the seasons—white in winter for camouflage in the snow, and brown in summer to blend with the tundra.
-* Fox Friendships – While foxes are mostly solitary, some form long-lasting bonds and even play with other animals, including dogs and humans.
+    # get slot value
+    def get_slot_value(self, slot_id : str):
+        for slot in self.slots:
+            if slot["id"] == slot_id:
+                found = True
+                return slot["value"]
+            
+        raise Exception(f"cannot find slot_id \"{slot_id}\"")
 
-Follow these rules
+    # nlu functionality
+    def nlu_chain(self, params : Tuple):
+        slot_id : str = params[0]
+        user_message : str = params[1]
+        chat_history : str = params[2]
 
-* Give short responses of maximal 3 sentences.
-* Do not include any newlines in the answer.
-
-{chat_history}
-User: {user_message}
-Bot: """
-
-        chain = PromptTemplate.from_template(prompt) | self.llm | StrOutputParser()
-        return chain
-
-    def create_duck_chain(self):
-        prompt = """You are a duck and have a conversation with a human. You will direct every conversation towards one of these topics. 
-
-* Waterproof Feathers – Ducks produce an oil from their uropygial gland (near their tail) that keeps their feathers completely waterproof. Water just rolls right off!
-* 360° Vision – Their eyes are positioned on the sides of their heads, giving them nearly a full-circle field of vision. They can see behind them without turning their heads!
-* Synchronized Sleeping – Ducks can sleep with one eye open and one side of their brain awake, allowing them to stay alert for predators while resting.
-* Quack Echo Mystery – There’s an old myth that a duck’s quack doesn’t echo, but it actually does—just at a pitch and tone that makes it hard to notice.
-* Feet That Don’t Feel Cold – Ducks’ feet have no nerves or blood vessels in the webbing, so they can stand on ice without feeling the cold.
-* Egg-Dumping Behavior – Some female ducks practice "brood parasitism," laying eggs in another duck’s nest to have someone else raise their ducklings.
-* Mimicry Skills – Some ducks, like the musk duck, can mimic human speech and other sounds, much like parrots!
-* Built-In Goggles – Ducks have a third eyelid (nictitating membrane) that acts like swim goggles, allowing them to see underwater.
-* Instant Dabbling – Many ducks are "dabblers," tipping their heads underwater while their butts stick up, searching for food without fully submerging.
-
-Follow these rules
-
-* Give short responses of maximal 3 sentences.
-* Do not include any newlines in the answer.
-
-{chat_history}
-User: {user_message}
-Bot: """
-
-        chain = PromptTemplate.from_template(prompt) | self.llm | StrOutputParser()
-        return chain
-
-    def create_text_classifier(self):
-
-        prompt = """Given message to a chatbot, classifiy if the message tells the chatbot to be a duck, a fox or none of these. 
-
-* Answer with one word only.
-* Answer with duck, fox or none.
-* Do not respond with more than one word.
-
-Examples:
-
-Message: Hey there, you are a fox.
-Classification: fox
-
-Message: I know that you are a duck.
-Classification: duck
-
-Message: Hello how are you doing?
-Classification: none
-
-Message: {message}
-Classification: """
-
-        chain = (
-            PromptTemplate.from_template(prompt)
-            | self.text_classifier_llm
-            | StrOutputParser()
-        )
-        return chain
-
-    def get_response(self, user_message, chat_history):
-
-        classification_callback = CustomCallback()
-        text_classification = self.text_classifier.invoke(
-            user_message,
-            {"callbacks": [classification_callback], "stop_sequences": ["\n"]},
-        )
-
-        if text_classification.find("\n") > 0:
-            text_classification = text_classification[
-                0 : text_classification.find("\n")
-            ]
-        text_classification = text_classification.strip()
-
-        if text_classification == "fox":
-            self.state = AnimalAgent.STATE_FOX
-        elif text_classification == "duck":
-            self.state = AnimalAgent.STATE_DUCK
-
-        if self.state == AnimalAgent.STATE_FOX:
-            chain = self.fox_chain
-        elif self.state == AnimalAgent.STATE_DUCK:
-            chain = self.duck_chain
+        assert slot_id in self.nlu_chains.keys()
 
         response_callback = CustomCallback()
-        chatbot_response = chain.invoke(
-            {"user_message": user_message, "chat_history": "\n".join(chat_history)},
-            {"callbacks": [response_callback], "stop_sequences": ["\n"]},
+        response = self.nlu_chains[slot_id].invoke(
+            {
+                "user_message": user_message, 
+                "chat_history": chat_history,
+            },
+            {
+                "callbacks": [response_callback], 
+                "stop_sequences": ["\n"]
+            },
+        )
+
+        response = response.strip()
+
+        logging.info(f"nlu \"{slot_id}\" got response \"{response}\" on message \"{user_message}\"")
+
+        if response.lower() == "none" or response.lower() == "none.":
+            result = None
+        else:
+            result = response
+
+        if result is not None:
+            logging.info(f"nlu detected slot \"{slot_id}={result}\" in message \"{user_message}\"")
+            self.fill_slot(slot_id, result)
+
+        log_message = {
+            "slot_id": slot_id,
+            "llm_details": {
+                key: value for key, value in response_callback.messages.items()
+            },
+            "result": result
+        }
+        return log_message
+
+    # main chat pipeline
+    # present result to the user
+    def get_response(self, user_message, chat_history):
+
+        chat_history_str : str = "\n".join(chat_history)
+
+        # call nlu chains
+        nlu_log_messages = None
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.slots)) as executor:
+            params = [(slot_id, user_message, chat_history_str) for slot_id in self.nlu_chains.keys()]
+            nlu_log_messages = executor.map(self.nlu_chain, params)
+            nlu_log_messages = list(nlu_log_messages)
+
+        response_callback = CustomCallback()
+        
+        # are all slots filled?
+        all_slots_filled = True
+        for slot in self.slots:
+            if slot["value"] is None:
+                all_slots_filled = False
+                break
+
+        if all_slots_filled:
+            api_results = "All slots filled. Please instruct the user to spray his potatoes in three days."
+        else:
+            api_results = ""
+
+        chatbot_response = self.generate_answer_chain.invoke(
+            {
+                "user_message": user_message, 
+                "chat_history": chat_history_str,
+                "knowledge_base": json.dumps(self.slots, indent=4),
+                "api_results": api_results
+            },
+            {
+                "callbacks": [response_callback], 
+                "stop_sequences": ["\n"]
+            },
         )
 
         log_message = {
             "user_message": str(user_message),
             "chatbot_response": str(chatbot_response),
-            "agent_state": self.state,
-            "classification": {
-                "result": text_classification,
-                "llm_details": {
-                    key: value
-                    for key, value in classification_callback.messages.items()
-                },
-            },
-            "chatbot_response": {
+            "slots": self.slots,
+            "answer_generation_llm_details": {
                 key: value for key, value in response_callback.messages.items()
             },
+            "nlu_details": nlu_log_messages
         }
 
         return chatbot_response, log_message
 
-
+# Write to the json logfile
 class LogWriter:
 
     def __init__(self):
         self.conversation_logfile = "conversation.jsonp"
         if os.path.exists(self.conversation_logfile):
             os.remove(self.conversation_logfile)
+        self.lock = Lock()
 
     # helper function to make sure json encoding the data will work
     def make_json_safe(self, value):
@@ -225,15 +253,15 @@ class LogWriter:
             return str(value)
 
     def write(self, log_message):
-        with open(self.conversation_logfile, "a") as f:
-            f.write(json.dumps(self.make_json_safe(log_message), indent=2))
-            f.write("\n")
-            f.close()
+        with self.lock:
+            with open(self.conversation_logfile, "a") as f:
+                f.write(json.dumps(self.make_json_safe(log_message)))
+                f.write("\n")
+                f.close()
 
-
-if __name__ == "__main__":
-
-    agent = AnimalAgent()
+# chat with the bot using the console
+def console_chatloop():
+    agent = PotatoBot()
     chat_history = []
     log_writer = LogWriter()
 
@@ -250,3 +278,35 @@ if __name__ == "__main__":
         chat_history.extend("Bot: " + chatbot_response)
 
         log_writer.write(log_message)
+
+# debug function - send a static dialog to the chatbot and get the answer
+# use this for developing the chatbot
+def static_dialog():
+
+    logging.info("starting static dialog")
+
+    agent = PotatoBot()
+    chat_history = []
+    log_writer = LogWriter()
+
+    user_messages = [
+        "hello",
+        "I sprayed my potatoes last saturday.",
+        "Musanze, Northern Province",
+        "My potatoes are 8 weeks old",
+        "Ndamira"
+    ]
+
+    for user_message in user_messages:
+        print("User: " + user_message)
+        chatbot_response, log_message = agent.get_response(user_message, chat_history)
+        print("Bot: " + chatbot_response)
+
+        chat_history.append("User: " + user_message)
+        chat_history.append("Bot: " + chatbot_response)
+
+        log_writer.write(log_message)
+
+if __name__ == "__main__":
+    logger = init_logging()
+    static_dialog()

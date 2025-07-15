@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any
-from animalbot import AnimalAgent, LogWriter
+from potatobot import PotatoBot, LogWriter, init_logging
 import logging
 from logging.handlers import RotatingFileHandler
 
@@ -11,22 +11,6 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 log_writer = LogWriter()
-
-def init_logging():
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)  # Set the desired logging level
-
-    formatter = logging.Formatter(
-        "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
-    )
-
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
-
-    file_handler = RotatingFileHandler('app.log', maxBytes=1024 * 1024, backupCount=5)
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
 
 init_logging()
 
@@ -40,7 +24,7 @@ app.add_middleware(
 )
 
 # Dictionary für Session-spezifische Agenten
-session_agents: Dict[str, AnimalAgent] = {}
+session_agents: Dict[str, PotatoBot] = {}
 
 class ChatMessage(BaseModel):
     message: str
@@ -49,7 +33,6 @@ class ChatMessage(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
-    state: str
     log_message: Dict[str, Any]
 
 @app.post("/chat", response_model=ChatResponse)
@@ -57,7 +40,7 @@ async def chat(chat_message: ChatMessage):
     try:
         # Prüfen ob eine Session-ID existiert, sonst neue erstellen
         if chat_message.session_id not in session_agents:
-            session_agents[chat_message.session_id] = AnimalAgent()
+            session_agents[chat_message.session_id] = PotatoBot()
         
         agent = session_agents[chat_message.session_id]
         response, log_message = agent.get_response(
@@ -67,7 +50,6 @@ async def chat(chat_message: ChatMessage):
         log_writer.write(log_message)
         return ChatResponse(
             response=response,
-            state=agent.state,
             log_message=log_message
         )
     except Exception as e:
