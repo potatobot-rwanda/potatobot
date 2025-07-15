@@ -80,17 +80,15 @@ col1, col2 = st.columns(2)
 with col1:
     st.markdown(f"""Chat with the PotatoBot.""")
 
+    # language selector
     chatbot_language = st.radio(
         "Language",
         ["Kinyarwanda", "English"]
     )
 
-    if chatbot_language == "Kinyarwanda":
-        st.write("You selected Kinyarwanda.")
-    else:
-        st.write("You didn't select comedy.")
-
 with col2:
+
+    # logo
     st.html(f'<img class="logo" src="{POTATOBOT_API_URL}/static/potatobot.png"/>')
 
 
