@@ -8,19 +8,19 @@ This is the PotatoBot. A chatbot that can help farmers in Rwanda with informatio
 
 ### Local development setup
 
-**Prerequisites**
+**1. Prerequisites**
 
 * Install Python 3.11 or higher.
 * Acquire your OpenAI API Key.
 * Install Git
 
-**Fork and clone the GitHub repository**
+**2. Fork and clone the GitHub repository**
 
 * One member of your group should fork this repository to his or her account.
 * Then, you can git clone this repository.
 * We assume for the remaining installation steps that you opened a shell inside of the cloned repository.
 
-**Setup local environment and install Python dependencies**
+**3. Setup local environment and install Python dependencies**
 
 Create environment
 ```
@@ -33,19 +33,22 @@ Install dependencies
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file in the project root:
+**4. Setup OpenAI API Key**
+
+Create a `.env` file in the project root and paste your API Key. The file should have this content:
+
 ```
 OPENAI_API_KEY=your_api_key_here
 ```
 
-4. Start the FastAPI server:
-```bash
+**5. Start the FastAPI server:**
+```
 cd chatbot
 python api.py
 ```
 
-5. In a new terminal, start the Streamlit app:
-```bash
+**6.In a new terminal, start the Streamlit app:**
+```
 cd chatbot
 streamlit run app.py
 ```
@@ -54,31 +57,10 @@ The application will be available at:
 - Streamlit Interface: http://localhost:8502
 - FastAPI: http://localhost:8000
 
-## Docker Deployment
 
-1. Create a `.env` file in the project root:
-```
-CHAT_AI_ACCESS_KEY=your_api_key_here
-```
+## Technical Architecture
 
-2. Build and start the containers:
-```bash
-docker compose up --build
-```
-
-The application will be available at:
-- Streamlit Interface: http://localhost:8501
-- FastAPI: http://localhost:8000
-
-## Usage
-
-1. Open the Streamlit interface in your browser
-2. Start chatting with the bot
-3. To switch personas, say:
-   - "You are a fox" to switch to fox mode
-   - "You are a duck" to switch to duck mode
-
-## Project Structure
+### Repository File and Folder Structure
 
 ```
 .
@@ -93,140 +75,31 @@ The application will be available at:
 └── .env               # Environment variables (not in git)
 ```
 
-## Development
+### Technologies used in the chatbot
 
 - The frontend is built with Streamlit
 - The backend uses FastAPI
-- The chatbot logic is in `animalbot.py`
+- The chatbot logic is in `potatobot.py`
 - Docker configuration is in `Dockerfile` and `compose.yml`
+
+## Notes on the development setup
+
+### Running the chatbot from console
+
+You can run chatbot also without the web browser based graphical user interface. You can run `potatobot.py` directly from the console:
+
+```
+cd chatbot
+python potatobot.py
+```
+
+You can find two types of console interfaces in `potatobot.py`:
+
+* `static_dialog()` runs a static dialog. So it automatically sends one or more messages to the chatbot. This is useful for debugging the chatbot.
+* `console_chatloop()` lets you chat in the console.
+
+You can activate the function by changing the code in the `if __name__ == "__main__":` section of `potatobot.py`.
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-# Animalbot
-
-The animalbot plays the role of a duck. He will only talk about duck related topics. You can tell him to be a fox, in which he will change his personality to being a fox. If you tell him to be a duck, he will change the personality back to duck.
-
-## Example conversation
-
-User: hi
-
-Bot: Quack! Nice to meet you, human! Did you know that we ducks have waterproof feathers? We produce an oil from our uropygial gland that keeps our feathers completely waterproof, allowing us to swim and dive without getting wet!
-
-User: tell me about your feathers
-
-Bot: My feathers! ...
-
-User: you are a fox
-
-Bot: My apologies! As a fox, I'd like to tell you about my silent steps. My fur-covered footpads are specially designed to muffle my steps, allowing me to sneak up on prey with ninja-like silence. It's a vital skill for a hunter like me!
-
-User: what kind of animal yare you?
-
-Bot: I'm a fox! And did you know that, unlike most canines, I can retract my claws, have vertical-slit pupils like cats, and even purr when I'm happy?
-
-User: what? tell me about your claws
-
-Bot: My claws! Unlike most dogs, I have retractable claws that...
-
-## Setting up the Environment Variables
-
-1. Copy the `.env.example` file to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-2. Open the `.env` file in the project directory.
-3. Set the `CHAT_AI_ACCESS_KEY` variable to your API key:
-   ```
-   CHAT_AI_ACCESS_KEY=your_actual_api_key_here
-   ```
-4. Save the file. The application will use this key by default.
-
-Alternatively, you can set the environment variable at the OS level:
-
-- On Windows (Command Prompt):
-  ```cmd
-  set CHAT_AI_ACCESS_KEY=your_actual_api_key_here
-  ```
-- On macOS/Linux (Terminal):
-  ```bash
-  export CHAT_AI_ACCESS_KEY=your_actual_api_key_here
-  ```
-
-## Running AnimalbotInstances
-
-AnimalBot supports running multiple instances using Docker Compose with customizable ports and data directories.
-
-### Basic Usage
-
-Start AnimalBot with default settings:
-
-```bash
-docker compose up -d
-```
-
-This will:
-- Start the API on port 8001
-- Start the UI on port 8502
-- Use the `./data` directory for storage
-
-### Custom Configuration
-
-Run an instance with custom ports and data directory:
-
-```bash
-API_PORT=8003 UI_PORT=8504 DATA_DIR=./data2 API_BASE_URL=http://localhost docker compose -p $(basename "$PWD") up -d
-```
-
-This command:
-- Uses the current directory name as the project name
-- Starts the API on port 8003
-- Starts the UI on port 8504
-- Uses the `./data2` directory for storage
-- Sets the API base URL to http://localhost (change if deploying to a remote server)
-
-### Managing Instances
-
-View logs for the current directory's instance:
-
-```bash
-docker compose -p $(basename "$PWD") logs -f
-```
-
-Stop the current directory's instance:
-
-```bash
-docker compose -p $(basename "$PWD") down
-```
-
-List all running Docker Compose projects:
-
-```bash
-docker compose ls
-```
-
-### Running Multiple Named Instances
-
-For multiple instances, you can use different directories:
-
-```bash
-# Create a new instance directory
-mkdir -p ~/path/to/animalbot-instance2
-cp -r ~/path/to/animalbot/* ~/path/to/animalbot-instance2/
-
-# Start the new instance with custom settings
-cd ~/path/to/animalbot-instance2
-API_PORT=8003 UI_PORT=8504 API_BASE_URL=http://localhost docker compose -p $(basename "$PWD") up -d
-```
-
-Each instance will use its directory name as the Docker Compose project name, keeping services isolated.
-
-### Accessing Your Instances
-
-- First instance API: http://localhost:8001
-- First instance UI: http://localhost:8502
-- Second instance API: http://localhost:8003  
-- Second instance UI: http://localhost:8504
-
-Replace `localhost` with your server's IP or domain name when deploying remotely.
