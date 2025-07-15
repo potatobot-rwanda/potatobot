@@ -4,49 +4,38 @@
 
 This is the PotatoBot. A chatbot that can help farmers in Rwanda with information about: "When should I spray my potatoes"?
 
+## Getting started
 
+### Local development setup
 
-# Demo for usage of Langchain with LLMs from chat-ai.academiccloud.de
-## Overview
+**Prerequisites**
 
-This is a simple demo that shows how the API from https://chat-ai.academiccloud.de/v1 can be used. 
-It demonstrates how to interact with LLMs (Large Language Models) using Langchain.
+* Install Python 3.11 or higher.
+* Acquire your OpenAI API Key.
+* Install Git
 
-For further information about Chat-AI, please also refer to the [Chat-AI.MD](/Chat-AI.md) document.
+**Fork and clone the GitHub repository**
 
-# Animal Chatbot
+* One member of your group should fork this repository to his or her account.
+* Then, you can git clone this repository.
+* We assume for the remaining installation steps that you opened a shell inside of the cloned repository.
 
-A conversational AI chatbot that can switch between a duck and fox persona. The chatbot uses a language model to generate responses and can be interacted with through a web interface.
+**Setup local environment and install Python dependencies**
 
-## Features
-
-- Switch between duck and fox personas
-- Web interface built with Streamlit
-- FastAPI backend
-- Docker support
-
-## Prerequisites
-
-- Python 3.11 or higher
-- Docker and Docker Compose (for containerized deployment)
-- CHAT_AI_ACCESS_KEY for the language model API
-
-## Local Development Setup
-
-1. Create a virtual environment:
-```bash
+Create environment
+```
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
 
-2. Install dependencies:
-```bash
+Install dependencies
+
+```
 pip install -r requirements.txt
 ```
 
 3. Create a `.env` file in the project root:
 ```
-CHAT_AI_ACCESS_KEY=your_api_key_here
+OPENAI_API_KEY=your_api_key_here
 ```
 
 4. Start the FastAPI server:
