@@ -64,7 +64,7 @@ python api.py
 **6.In a new terminal, start the Streamlit app:**
 ```
 cd chatbot
-streamlit run app.py
+streamlit run webapp.py
 ```
 
 The application will be available at:
@@ -78,7 +78,7 @@ The application will be available at:
 ```
 .
 ├── chatbot/
-│   ├── app.py          # Streamlit frontend
+│   ├── webapp.py          # Streamlit frontend
 │   ├── api.py          # FastAPI backend
 │   ├── animalbot.py    # Core chatbot logic
 │   └── Dockerfile      # Docker configuration
