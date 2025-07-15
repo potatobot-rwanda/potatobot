@@ -181,8 +181,7 @@ class PotatoBot:
 
     # main chat pipeline
     # present result to the user
-    def get_response(self, user_message, chat_history):
-
+    def get_response(self, user_message : str, chat_history : List[str], language : str):
         chat_history_str : str = "\n".join(chat_history)
 
         # call nlu chains
@@ -211,7 +210,8 @@ class PotatoBot:
                 "user_message": user_message, 
                 "chat_history": chat_history_str,
                 "knowledge_base": json.dumps(self.slots, indent=4),
-                "api_results": api_results
+                "api_results": api_results,
+                "language": language
             },
             {
                 "callbacks": [response_callback], 
@@ -285,11 +285,13 @@ def static_dialog():
 
     logging.info("starting static dialog")
 
-    agent = PotatoBot()
-    chat_history = []
-    log_writer = LogWriter()
+    agent : PotatoBot = PotatoBot()
+    chat_history : List[str] = []
+    log_writer : LogWriter= LogWriter()
 
-    user_messages = [
+    language : str = "English"
+
+    user_messages : List[str] = [
         "hello",
         "I sprayed my potatoes last saturday.",
         "Musanze, Northern Province",
@@ -299,7 +301,7 @@ def static_dialog():
 
     for user_message in user_messages:
         print("User: " + user_message)
-        chatbot_response, log_message = agent.get_response(user_message, chat_history)
+        chatbot_response, log_message = agent.get_response(user_message, chat_history, language)
         print("Bot: " + chatbot_response)
 
         chat_history.append("User: " + user_message)
@@ -310,3 +312,5 @@ def static_dialog():
 if __name__ == "__main__":
     logger = init_logging()
     static_dialog()
+
+    # console_chatloop()

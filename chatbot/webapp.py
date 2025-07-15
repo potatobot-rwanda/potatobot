@@ -55,6 +55,7 @@ st.markdown(
 
     .logo{
         width: 200px;
+        float: right;
     }
 </style>
 """,
@@ -117,7 +118,7 @@ for message in st.session_state.messages:
                 unsafe_allow_html=True,
             )
 
-# Inputfield inside of a container
+# Eingabefeld in einem Container
 with st.container():
     st.markdown('<div class="input-container">', unsafe_allow_html=True)
     user_input = st.text_input(
@@ -126,11 +127,11 @@ with st.container():
     st.markdown("</div>", unsafe_allow_html=True)
 
 if user_input and user_input != st.session_state.last_input:
-    # Add message to history
+    # Nachricht zum Chat-Verlauf hinzufügen
     st.session_state.messages.append({"role": "user", "content": user_input})
     st.session_state.last_input = user_input
 
-    # Send API request
+    # API-Anfrage senden
     try:
         response = requests.post(
             POTATOBOT_API_URL + "/chat",
@@ -138,17 +139,17 @@ if user_input and user_input != st.session_state.last_input:
                 "message": user_input,
                 "chat_history": [msg["content"] for msg in st.session_state.messages],
                 "session_id": st.session_state.session_id,
-                "language": st.language
+                "language": chatbot_language
             },
         )
         response_data = response.json()
 
-        # Add bot response to history
+        # Bot-Antwort zum Chat-Verlauf hinzufügen
         st.session_state.messages.append(
             {"role": "bot", "content": response_data["response"]}
         )
 
-        # Clear text input
+        # Eingabefeld leeren durch Erhöhung des Keys
         st.session_state.input_key += 1
         st.rerun()
 

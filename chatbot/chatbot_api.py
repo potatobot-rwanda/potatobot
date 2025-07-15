@@ -30,6 +30,7 @@ class ChatMessage(BaseModel):
     message: str
     chat_history: List[str] = []
     session_id: str
+    language : str
 
 class ChatResponse(BaseModel):
     response: str
@@ -45,7 +46,8 @@ async def chat(chat_message: ChatMessage):
         agent = session_agents[chat_message.session_id]
         response, log_message = agent.get_response(
             chat_message.message, 
-            chat_message.chat_history
+            chat_message.chat_history,
+            chat_message.language
         )
         log_writer.write(log_message)
         return ChatResponse(
