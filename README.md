@@ -78,7 +78,7 @@ The application will be available at:
 ```
 .
 ├── chatbot/
-├── ├── prompts/            # Chatbot prompts
+├────── prompts/            # Chatbot prompts
 │   ├── webapp.py       # Streamlit frontend
 │   ├── chatbot_api.py  # FastAPI backend that wraps an HTTP API around the chatbot
 │   ├── potatobot.py    # Chatbot logic
