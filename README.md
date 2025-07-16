@@ -6,16 +6,25 @@ This is the PotatoBot, a chatbot that can help farmers in Rwanda with informatio
 
 ## Table of Contents
 
-* [Getting started](#getting-started)
-  + [Local development setup](#local-development-setup)
-* [Technical Architecture](#technical-architecture)
-  + [Repository File and Folder Structure](#repository-file-and-folder-structure)
-  + [Technologies used in the chatbot](#technologies-used-in-the-chatbot)
-* [Notes on chatbot development](#notes-on-chatbot-development)
-  + [Running the chatbot from console](#running-the-chatbot-from-console)
-  + [Logfiles](#logfiles)
-  + [Caching](#caching)
-* [License](#license)
+[Table of Contents](#table-of-contents)
+
+[Getting started](#getting-started)
+
+- [Reading list](#reading-list)
+- [Local development setup](#local-development-setup)
+  
+[Technical Architecture](#technical-architecture)
+
+- [Repository File and Folder Structure](#repository-file-and-folder-structure)
+- [Technologies used in the chatbot](#technologies-used-in-the-chatbot)
+
+[Notes on chatbot development](#notes-on-chatbot-development)
+- [Running the chatbot from console](#running-the-chatbot-from-console)
+- [Logfiles](#logfiles)
+- [Caching](#caching)
+
+[License](#license)
+
 
 ## Getting started
 
