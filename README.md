@@ -19,6 +19,15 @@ This is the PotatoBot, a chatbot that can help farmers in Rwanda with informatio
 
 ## Getting started
 
+### Reading list
+
+* [What is Agentic AI?](https://huggingface.co/docs/smolagents/conceptual_guides/intro_agents)
+* LangChain Tutorials
+  * [Chat models and prompts](https://python.langchain.com/docs/tutorials/llm_chain/): Build a simple LLM application with [prompt templates](https://python.langchain.com/docs/concepts/prompt_templates/) and [chat models](https://python.langchain.com/docs/concepts/chat_models/).
+  * [Extraction: Extract structured data from text and other unstructured media using chat models and few-shot examples.](https://python.langchain.com/docs/tutorials/extraction/)
+* [Introduction to StreamLit](https://docs.streamlit.io/get-started/fundamentals/main-concepts)
+* [FastAPI - First Steps](https://fastapi.tiangolo.com/tutorial/first-steps)
+
 ### Local development setup
 
 **1. Prerequisites**
