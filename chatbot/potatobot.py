@@ -46,6 +46,7 @@ API_KEY = os.getenv("OPENAI_API_KEY")
 if not API_KEY:
     API_KEY = getpass.getpass("Enter your OPENAI_API_KEY: ")
 
+# custom langchain callback to log llm details
 # https://python.langchain.com/v0.1/docs/modules/callbacks/
 class CustomCallback(BaseCallbackHandler):
 
