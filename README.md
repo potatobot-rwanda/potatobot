@@ -82,7 +82,7 @@ python chatbot_api.py
 **6.In a new terminal, start the Streamlit app:**
 ```
 cd chatbot
-streamlit run webapp.py
+streamlit run chatbot_ui.py
 ```
 
 The application will be available at:
@@ -90,6 +90,26 @@ The application will be available at:
 - FastAPI: http://localhost:8000
 
 ## Technical Architecture
+
+### Architecture High-Level Overview
+
+<img src="https://github.com/potatobot-rwanda/potatobot/blob/main/chatbot/static/potatobot.png" width="400" style="float:left">
+
+The image shows the architecture of the chatbot.
+
+1. The user accesses the chatbot via the webbrowser.
+2. The docker container chatbot is maintained by the chatbot team.
+3. The NGINX reverse proxy maps the different ports of the user interface and the chat interface to one single server on port 80 to prevent [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS) issues.
+4. The user interface is hosted by the streamlit app. It runs on port 8000.
+5. When the user sends a message, the message is sent to the Chatbot HTTP API. This runs on port 8001.
+6. The chatbot API calls the PotatoBot. The PotatoBot handles the chatbot logic and the answer generation.
+7. The PotatoBot uses Large Language Models hosted by OpenAI to generate the answer.
+8. The AI Models docker container is maintained by the AI-models team.
+9. The PotatoBot accesses the AI models via AI Models HTTP API, which runs on port 8002.
+10. The entity recognition models detect locations, temporal expressions and potato varieties in the text. By default, they also use OpenAIs Large Language Models for the detection.
+11. The Location Linking service helps to link the location as mentioned in the user's message to the database.
+12. The Potato Detector links the potato variety as mentioned in the user's message to the database.
+13. Temporal Expression Normalization converts dates mentioned in the text (e.g. three days ago) to a specific date (22.7.2025).
 
 ### Repository File and Folder Structure
 

@@ -20,6 +20,8 @@ set_llm_cache(SQLiteCache(database_path=".langchain.db"))
 
 from dotenv import load_dotenv
 
+POTATOBOT_API_URL = os.environ.get("POTATOBOT_API_URL", "http://localhost:8000")
+
 def init_logging(console_level = logging.WARNING, file_level = logging.INFO):
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -42,6 +44,7 @@ load_dotenv(
 )
 
 # Get API key from environment variable or prompt the user
+load_dotenv("../.env")
 API_KEY = os.getenv("OPENAI_API_KEY")
 if not API_KEY:
     API_KEY = getpass.getpass("Enter your OPENAI_API_KEY: ")
@@ -110,13 +113,6 @@ class PotatoBot:
             },
         ]
 
-        # instantiate nlu chains
-        self.nlu_chains = {}
-        for slot in self.slots:
-            slot_id = slot["id"]
-            prompt =  open(f"prompts/nlu_{slot_id}.txt").read()
-            self.nlu_chains[slot_id] = PromptTemplate.from_template(prompt) | self.llm | StrOutputParser()
-
         prompt =  open("prompts/generate_answer.txt").read()
         self.generate_answer_chain = PromptTemplate.from_template(prompt) | self.llm | StrOutputParser()
 
@@ -138,61 +134,11 @@ class PotatoBot:
             
         raise Exception(f"cannot find slot_id \"{slot_id}\"")
 
-    # nlu functionality
-    def nlu_chain(self, params : Tuple):
-        slot_id : str = params[0]
-        user_message : str = params[1]
-        chat_history : str = params[2]
-
-        assert slot_id in self.nlu_chains.keys()
-
-        response_callback = CustomCallback()
-        response = self.nlu_chains[slot_id].invoke(
-            {
-                "user_message": user_message, 
-                "chat_history": chat_history,
-            },
-            {
-                "callbacks": [response_callback], 
-                "stop_sequences": ["\n"]
-            },
-        )
-
-        response = response.strip()
-
-        logging.info(f"nlu \"{slot_id}\" got response \"{response}\" on message \"{user_message}\"")
-
-        if response.lower() == "none" or response.lower() == "none.":
-            result = None
-        else:
-            result = response
-
-        if result is not None:
-            logging.info(f"nlu detected slot \"{slot_id}={result}\" in message \"{user_message}\"")
-            self.fill_slot(slot_id, result)
-
-        log_message = {
-            "slot_id": slot_id,
-            "llm_details": {
-                key: value for key, value in response_callback.messages.items()
-            },
-            "result": result
-        }
-        return log_message
-
     # main chat pipeline
     # present result to the user
-    def get_response(self, user_message : str, chat_history : List[str], language : str):
+    def get_response(self, user_message : str, chat_history : List[str]):
         chat_history_str : str = "\n".join(chat_history)
 
-        # call nlu chains
-        nlu_log_messages = None
-        with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.slots)) as executor:
-            params = [(slot_id, user_message, chat_history_str) for slot_id in self.nlu_chains.keys()]
-            nlu_log_messages = executor.map(self.nlu_chain, params)
-            nlu_log_messages = list(nlu_log_messages)
-
-        response_callback = CustomCallback()
         
         # are all slots filled?
         all_slots_filled = True
@@ -206,13 +152,13 @@ class PotatoBot:
         else:
             api_results = ""
 
+        response_callback = CustomCallback()
         chatbot_response = self.generate_answer_chain.invoke(
             {
                 "user_message": user_message, 
                 "chat_history": chat_history_str,
                 "knowledge_base": json.dumps(self.slots, indent=4),
-                "api_results": api_results,
-                "language": language
+                "api_results": api_results
             },
             {
                 "callbacks": [response_callback], 
@@ -227,7 +173,7 @@ class PotatoBot:
             "answer_generation_llm_details": {
                 key: value for key, value in response_callback.messages.items()
             },
-            "nlu_details": nlu_log_messages
+            # "nlu_details": nlu_log_messages
         }
 
         return chatbot_response, log_message
@@ -290,8 +236,6 @@ def static_dialog():
     chat_history : List[str] = []
     log_writer : LogWriter= LogWriter()
 
-    language : str = "English"
-
     user_messages : List[str] = [
         "hello",
         "I sprayed my potatoes last saturday.",
@@ -302,7 +246,7 @@ def static_dialog():
 
     for user_message in user_messages:
         print("User: " + user_message)
-        chatbot_response, log_message = agent.get_response(user_message, chat_history, language)
+        chatbot_response, log_message = agent.get_response(user_message, chat_history)
         print("Bot: " + chatbot_response)
 
         chat_history.append("User: " + user_message)
