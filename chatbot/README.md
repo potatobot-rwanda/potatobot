@@ -24,18 +24,18 @@ CHAT_AI_ACCESS_KEY=your_api_key_here
 4. Start the FastAPI server:
 ```bash
 cd chatbot
-uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+uvicorn chatbot_api:app --host 0.0.0.0 --port 8001 --reload
 ```
 
 5. In a new terminal, start the Streamlit app:
 ```bash
 cd chatbot
-streamlit run app.py
+streamlit run chatbot_ui.py
 ```
 
 The application will be available at:
-- Streamlit Interface: http://localhost:8502
-- FastAPI: http://localhost:8000
+- Chatbot User Interface Streamlit Interface: http://localhost:8000
+- FastAPI: http://localhost:8001
 
 ## Features
 

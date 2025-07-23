@@ -83,7 +83,7 @@ with col1:
 with col2:
 
     # logo
-    st.html(f'<img class="logo" src="{POTATOBOT_API_URL}/static/potatobot.png"/>')
+    st.html(f'<img class="logo" src="{POTATOBOT_API_URL}/app/static/potatobot.png"/>')
 
 
 # Chat-Verlauf anzeigen
