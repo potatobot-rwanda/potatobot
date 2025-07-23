@@ -93,7 +93,7 @@ The application will be available at:
 
 ### Architecture High-Level Overview
 
-<img src="https://github.com/potatobot-rwanda/potatobot/blob/main/chatbot/static/potatobot.png" width="400" style="float:left">
+<img src="https://github.com/potatobot-rwanda/potatobot/blob/main/images/architecture-high-level-overview.drawio.png" width="700" style="float:left">
 
 The image shows the architecture of the chatbot.
 
