@@ -20,8 +20,6 @@ set_llm_cache(SQLiteCache(database_path=".langchain.db"))
 
 from dotenv import load_dotenv
 
-POTATOBOT_API_URL = os.environ.get("POTATOBOT_API_URL", "http://localhost:8000")
-
 def init_logging(console_level = logging.WARNING, file_level = logging.INFO):
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -46,6 +44,8 @@ load_dotenv(
 # Get API key from environment variable or prompt the user
 load_dotenv("../.env")
 API_KEY = os.getenv("OPENAI_API_KEY")
+NLU_API_URL = os.environ.get("NLU_API_URL", "http://localhost:8000")
+
 if not API_KEY:
     API_KEY = getpass.getpass("Enter your OPENAI_API_KEY: ")
 
@@ -99,11 +99,6 @@ class PotatoBot:
             {
                 "id": "location",
                 "description": "What is the location of the farm?",
-                "value": None
-            },
-            {
-                "id": "plant_date",
-                "description": "When did the farmer plant his potatoes?",
                 "value": None
             },
             {
@@ -240,7 +235,6 @@ def static_dialog():
         "hello",
         "I sprayed my potatoes last saturday.",
         "Musanze, Northern Province",
-        "My potatoes are 8 weeks old",
         "Ndamira"
     ]
 

@@ -8,7 +8,7 @@ import os
 st.set_page_config(page_title="PotatoBot", page_icon="🥔", layout="centered")
 
 # Get API base URL from environment variable or use default
-POTATOBOT_API_URL = os.environ.get("POTATOBOT_API_URL", "http://localhost:8000")
+POTATOBOT_API_URL = os.environ.get("POTATOBOT_API_URL", "http://localhost:8001")
 
 print(f"API_URL: {POTATOBOT_API_URL}")
 
@@ -83,7 +83,7 @@ with col1:
 with col2:
 
     # logo
-    st.html(f'<img class="logo" src="{POTATOBOT_API_URL}/app/static/potatobot.png"/>')
+    st.html(f'<img class="logo" src="{POTATOBOT_API_URL}/static/potatobot.png"/>')
 
 
 # Chat-Verlauf anzeigen

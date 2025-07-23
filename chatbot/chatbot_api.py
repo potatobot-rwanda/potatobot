@@ -6,6 +6,8 @@ from typing import List, Dict, Any
 from potatobot import PotatoBot, LogWriter, init_logging
 import logging
 from logging.handlers import RotatingFileHandler
+import time
+import os
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -15,13 +17,15 @@ log_writer = LogWriter()
 init_logging()
 
 # CORS für lokale Entwicklung
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+if os.getenv("DISABLE_CORS", "0") == "0":
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # Dictionary für Session-spezifische Agenten
 session_agents: Dict[str, PotatoBot] = {}
@@ -38,15 +42,17 @@ class ChatResponse(BaseModel):
 @app.post("/chat", response_model=ChatResponse)
 async def chat(chat_message: ChatMessage):
     try:
-        # Prüfen ob eine Session-ID existiert, sonst neue erstellen
+        start_time = time.time()
+        # check if there is a session id. or create one.
         if chat_message.session_id not in session_agents:
             session_agents[chat_message.session_id] = PotatoBot()
-        
+
         agent = session_agents[chat_message.session_id]
         response, log_message = agent.get_response(
             chat_message.message, 
             chat_message.chat_history,
         )
+        log_message["duration"] = time.time() - start_time
         log_writer.write(log_message)
         return ChatResponse(
             response=response,

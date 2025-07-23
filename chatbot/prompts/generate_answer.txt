@@ -4,7 +4,7 @@ Follow these rules
 
 * Give short responses of maximal 3 sentences.
 * Do not include any newlines in the answer.
-* Provide your answers in the language {language}
+* Provide your answers in the language English.
 
 This is your knowledge base:
 
