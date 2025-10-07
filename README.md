@@ -1,6 +1,6 @@
 # PotatoBot
 
-<img src="https://github.com/potatobot-rwanda/potatobot/blob/main/chatbot/static/potatobot.png" width="250" style="float:left">
+<img src="https://github.com/potatobot-rwanda/potatobot/blob/main/src/static/potatobot.png" width="250" style="float:left">
 
 This is the PotatoBot, a chatbot that can help farmers in Rwanda with information about: "When should I spray my potatoes"?
 
