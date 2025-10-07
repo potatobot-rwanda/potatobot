@@ -75,13 +75,13 @@ OPENAI_API_KEY=your_api_key_here
 
 **5. Start the FastAPI server:**
 ```
-cd chatbot
+cd src
 python chatbot_api.py
 ```
 
 **6.In a new terminal, start the Streamlit app:**
 ```
-cd chatbot
+cd src
 streamlit run chatbot_ui.py
 ```
 
@@ -115,7 +115,7 @@ The image shows the architecture of the chatbot.
 
 ```
 .
-├── chatbot/
+├── src/
 ├────── prompts/            # Chatbot prompts
 │   ├── webapp.py       # Streamlit frontend
 │   ├── chatbot_api.py  # FastAPI backend that wraps an HTTP API around the chatbot
@@ -141,7 +141,7 @@ The image shows the architecture of the chatbot.
 You can run chatbot also without the web browser based graphical user interface. You can run `potatobot.py` directly from the console:
 
 ```
-cd chatbot
+cd src
 python potatobot.py
 ```
 

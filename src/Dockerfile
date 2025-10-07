@@ -7,7 +7,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code
-COPY chatbot/ .
+COPY . .
 
 # Create a non-root user and set up permissions
 RUN useradd -m dev && \

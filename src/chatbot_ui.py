@@ -8,7 +8,7 @@ import os
 st.set_page_config(page_title="PotatoBot", page_icon="🥔", layout="centered")
 
 # Get API base URL from environment variable or use default
-POTATOBOT_API_URL = os.environ.get("POTATOBOT_API_URL", "http://localhost:8001")
+POTATOBOT_API_URL = os.environ.get("POTATOBOT_API_URL", "http://localhost:8002")
 
 print(f"API_URL: {POTATOBOT_API_URL}")
 
@@ -86,7 +86,7 @@ with col2:
     st.html(f'<img class="logo" src="{POTATOBOT_API_URL}/static/potatobot.png"/>')
 
 
-# Chat-Verlauf anzeigen
+# show chat history
 for message in st.session_state.messages:
     with st.container():
         if message["role"] == "user":
@@ -110,7 +110,7 @@ for message in st.session_state.messages:
                 unsafe_allow_html=True,
             )
 
-# Eingabefeld in einem Container
+# input field
 with st.container():
     st.markdown('<div class="input-container">', unsafe_allow_html=True)
     user_input = st.text_input(
@@ -119,14 +119,14 @@ with st.container():
     st.markdown("</div>", unsafe_allow_html=True)
 
 if user_input and user_input != st.session_state.last_input:
-    # Nachricht zum Chat-Verlauf hinzufügen
+    # add messages to chat history
     st.session_state.messages.append({"role": "user", "content": user_input})
     st.session_state.last_input = user_input
 
-    # API-Anfrage senden
+    # send api request
     try:
         response = requests.post(
-            POTATOBOT_API_URL + "/chat",
+            POTATOBOT_API_URL + "/api/chat",
             json={
                 "message": user_input,
                 "chat_history": [msg["role"] + ": " + msg["content"] for msg in st.session_state.messages][0:-1],
@@ -137,12 +137,12 @@ if user_input and user_input != st.session_state.last_input:
         print(response.json())
         response_data = response.json()
 
-        # Bot-Antwort zum Chat-Verlauf hinzufügen
+        # add bot response to chat history
         st.session_state.messages.append(
             {"role": "bot", "content": response_data["response"]}
         )
 
-        # Eingabefeld leeren durch Erhöhung des Keys
+        # clear input
         st.session_state.input_key += 1
         st.rerun()
 

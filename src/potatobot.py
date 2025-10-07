@@ -7,9 +7,9 @@ from multiprocessing import Lock
 import concurrent.futures
 import logging
 from logging.handlers import RotatingFileHandler
+import requests
 
 from langchain_core.output_parsers import StrOutputParser
-from langchain.callbacks.base import BaseCallbackHandler
 from langchain_core.prompts import PromptTemplate
 from langchain_core.outputs import LLMResult
 from langchain_openai import ChatOpenAI
@@ -18,62 +18,10 @@ from langchain_community.cache import SQLiteCache
 from langchain.globals import set_llm_cache
 set_llm_cache(SQLiteCache(database_path=".langchain.db"))
 
-from dotenv import load_dotenv
+from util import init_logging, load_openai_api_key, CustomCallback
 
-def init_logging(console_level = logging.WARNING, file_level = logging.INFO):
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-
-    formatter = logging.Formatter(
-        "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
-    )
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
-    console_handler.setLevel(console_level)
-    logger.addHandler(console_handler)
-
-    file_handler = RotatingFileHandler('app.log', maxBytes=1024 * 1024, backupCount=5)
-    file_handler.setFormatter(formatter)
-    file_handler.setLevel(file_level)
-    logger.addHandler(file_handler)
-
-load_dotenv(
-    dotenv_path=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
-)
-
-# Get API key from environment variable or prompt the user
-load_dotenv("../.env")
-API_KEY = os.getenv("OPENAI_API_KEY")
-NLU_API_URL = os.environ.get("NLU_API_URL", "http://localhost:8000")
-
-if not API_KEY:
-    API_KEY = getpass.getpass("Enter your OPENAI_API_KEY: ")
-
-# custom langchain callback to log llm details
-# https://python.langchain.com/v0.1/docs/modules/callbacks/
-class CustomCallback(BaseCallbackHandler):
-
-    def __init__(self):
-        self.messages = {}
-
-    def on_llm_start(
-        self, serialized: dict[str, Any], prompts: list[str], **kwargs: Any
-    ) -> Any:
-        self.messages["on_llm_start_prompts"] = prompts
-        self.messages["on_llm_start_kwargs"] = kwargs
-
-    def on_llm_end(self, response: LLMResult, **kwargs: Any) -> Any:
-
-        llm_generation = []
-        for gen in response.generations:
-            for gen2 in gen:
-                llm_generation.append({
-                    "text": gen2.text,
-                    "generation_info": gen2.generation_info
-                })
-
-        self.messages["on_llm_end_response"] = llm_generation
-        self.messages["on_llm_end_kwargs"] = kwargs
+API_KEY = load_openai_api_key()
+NLU_API_URL = os.environ.get("NLU_API_URL", "http://localhost:8001")
 
 class PotatoBot:
 
@@ -111,7 +59,7 @@ class PotatoBot:
         prompt =  open("prompts/generate_answer.txt").read()
         self.generate_answer_chain = PromptTemplate.from_template(prompt) | self.llm | StrOutputParser()
 
-    # fill one of the slots with a predefined value
+    # fill one of the slots with a value
     def fill_slot(self, slot_id : str, slot_value : str):
         found = False
         for slot in self.slots:
@@ -129,12 +77,29 @@ class PotatoBot:
             
         raise Exception(f"cannot find slot_id \"{slot_id}\"")
 
+    def ner(self, user_message : str, chat_history : List[str]) -> List[Dict[str, Any]]:
+        response = requests.post(
+            f"{NLU_API_URL}/api/ner",
+            json={
+                "user_message": user_message,
+                "chat_history": chat_history
+            },
+            timeout=10
+        )
+        ner_results = response.json().get("ner_results")
+        for r in ner_results:
+            self.fill_slot(r["entity_class"], r["surface_value"])
+
+        return ner_results
+        
     # main chat pipeline
     # present result to the user
     def get_response(self, user_message : str, chat_history : List[str]):
+
+        self.ner(user_message, chat_history)
+        
         chat_history_str : str = "\n".join(chat_history)
 
-        
         # are all slots filled?
         all_slots_filled = True
         for slot in self.slots:
@@ -200,26 +165,6 @@ class LogWriter:
                 f.write(json.dumps(self.make_json_safe(log_message)))
                 f.write("\n")
                 f.close()
-
-# chat with the bot using the console
-def console_chatloop():
-    agent = PotatoBot()
-    chat_history = []
-    log_writer = LogWriter()
-
-    while True:
-        user_message = input("User: ")
-        if user_message.lower() in ["quit", "exit", "bye"]:
-            print("Goodbye!")
-            break
-
-        chatbot_response, log_message = agent.get_response(user_message, chat_history)
-        print("Bot: " + chatbot_response)
-
-        chat_history.extend("User: " + user_message)
-        chat_history.extend("Bot: " + chatbot_response)
-
-        log_writer.write(log_message)
 
 # debug function - send a static dialog to the chatbot and get the answer
 # use this for developing the chatbot
